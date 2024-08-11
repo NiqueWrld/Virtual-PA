@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard</title>
+    <!-- Firebase App (the core Firebase SDK) -->
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-app-compat.js"></script>
+    <!-- Firebase Auth SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-auth-compat.js"></script>
+    <!-- Firebase Realtime Database SDK -->
+    <script src="https://www.gstatic.com/firebasejs/10.0.0/firebase-database-compat.js"></script>
+    <link rel="stylesheet" href="styles.css"/>
+</head>
+
+<body>
+
+    <div class="dashboard">
+        <h2>Welcome, <span id="userName"></span></h2>
+        <p>Name: <span id="nameDisplay"></span></p>
+        <p>Surname: <span id="surnameDisplay"></span></p>
+
+        <h3>Add Hobby</h3>
+        <input type="text" id="hobbyInput" placeholder="Enter a new hobby">
+        <select id="importance">
+            <option value="">Select Importance</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+        </select>
+        <input type="number" id="frequency" placeholder="Times per week" min="1">
+        <button onclick="addHobby()">Add Hobby</button>
+        <div id="hobbyList"></div>
+
+        <h3>Add Task</h3>
+        <input type="text" id="taskInput" placeholder="Enter a new task">
+        <input type="datetime-local" id="startTimeInput">
+        <input type="date" id="deadlineInput">
+        <select id="priority">
+            <option value="">Select Priority</option>
+            <option value="low">Low</option>
+            <option value="medium">Medium</option>
+            <option value="high">High</option>
+        </select>
+        <input type="text" id="progressInput" placeholder="Progress (e.g., 50%)">
+        <button onclick="addTask()">Add Task</button>
+        <div id="taskList"></div>
+
+        <h3>Today's Schedule</h3>
+        <div id="schedule"></div>
+    </div>
+
+    <script src="script.js"></script>
+
+</body>
+
+</html>
