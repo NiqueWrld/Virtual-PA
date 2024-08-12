@@ -148,7 +148,6 @@
 
         auth.signInWithEmailAndPassword(email, password)
             .then((userCredential) => {
-                alert("Login successful!");
                  // Redirect to dashboard on successful login
                  window.location.href = "/Dashboard";
             })
