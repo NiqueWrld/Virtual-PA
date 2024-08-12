@@ -33,7 +33,8 @@ document.addEventListener('DOMContentLoaded', function () {
   });
 
 
-// Select all more buttons and corresponding more options menus
+function updateMoreOptions(){
+  // Select all more buttons and corresponding more options menus
 const moreBtns = document.querySelectorAll('.project-btn-more');
 const moreOptionsMenus = document.querySelectorAll('.more-options');
 
@@ -61,4 +62,6 @@ document.addEventListener('click', function(event) {
         }
     });
 });
+
+}
 

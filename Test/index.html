@@ -1,0 +1,144 @@
+<html>
+    <head>
+    </head>
+    <style>
+       .timetable-section {
+           max-width: 600px;
+           margin: auto;
+       }
+
+       .timetable-header {
+           text-align: center;
+           margin-bottom: 20px;
+       }
+
+       .timetable {
+           display: grid;
+           grid-template-columns: repeat(1, 1fr);
+           gap: 10px;
+       }
+
+       .hour-block {
+           display: flex;
+           flex-direction: column;
+           border: 1px solid #ccc;
+           padding: 10px;
+           border-radius: 5px;
+           min-height: 60px;
+       }
+
+       .hour {
+           font-weight: bold;
+           color: #333;
+           margin-bottom: 5px;
+       }
+
+       .activity {
+           color: #666;
+       }
+
+       .activity-details {
+           font-size: 12px;
+           color: #888;
+       }
+    </style>
+    <body>
+        <div class="timetable-section">
+            <div class="timetable-header">
+                <p>24-Hour Schedule</p>
+            </div>
+            <div id="timetable" class="timetable">
+                <!-- Timetable will be generated here -->
+            </div>
+        </div>
+        <script>
+            // Example data arrays
+            const tasks = [
+                { hour: 1, text: "Coding", type: "task", completed: false, deadline: "2024-08-13", priority: "medium", progress: 90, startTime: "2024-08-12T01:13" },
+                { hour: 9, text: "Team Meeting", type: "obligation", completed: true, deadline: "2024-08-13", priority: "high", progress: 100, startTime: "2024-08-12T09:00" },
+                { hour: 14, text: "Project Work", type: "task", completed: false, deadline: "2024-08-13", priority: "high", progress: 50, startTime: "2024-08-12T14:00" },
+                { hour: 16, text: "Client Call", type: "obligation", completed: false, deadline: "2024-08-13", priority: "medium", progress: 20, startTime: "2024-08-12T16:00" },
+            ];
+
+            const hobbies = [
+                { frequency: 2, importance: "high", text: "Reading", numberThisWeek: 0, lastDate: null },
+                { frequency: 2, importance: "medium", text: "Swimming", numberThisWeek: 0, lastDate: null },
+                { frequency: 1, importance: "low", text: "Gaming", numberThisWeek: 0, lastDate: null }
+            ];
+
+            function generateTimetable() {
+                const timetable = document.getElementById("timetable");
+                const today = new Date();
+                const startOfWeek = today.getDate() - today.getDay(); // Get the start of the week (Sunday)
+                const weekStartDate = new Date(today.setDate(startOfWeek));
+                const weekStartISO = weekStartDate.toISOString().split('T')[0]; // YYYY-MM-DD format
+                
+                // Create an array for 24 hours
+                const hours = Array(24).fill(null);
+
+                // Assign tasks and obligations to specific hours
+                tasks.forEach(task => {
+                    hours[task.hour] = task;
+                });
+
+                // Assign hobbies to free hours based on importance and frequency
+                hobbies.forEach(hobby => {
+                    let assignedCount = 0;
+                    for (let i = 0; i < hours.length; i++) {
+                        if (hours[i] === null && hobby.importance === "high" && assignedCount < hobby.frequency) {
+                            hours[i] = { text: hobby.text, type: "hobby", importance: hobby.importance, frequency: hobby.frequency };
+                            assignedCount++;
+                            hobby.numberThisWeek++;
+                            hobby.lastDate = weekStartISO; // Update lastDate to the start of the current week
+                        }
+                    }
+                });
+
+                // Generate the timetable UI
+                hours.forEach((activity, hour) => {
+                    const hourBlock = document.createElement("div");
+                    hourBlock.className = "hour-block";
+
+                    const hourLabel = document.createElement("div");
+                    hourLabel.className = "hour";
+                    hourLabel.textContent = `${String(hour).padStart(2, "0")}:00`;
+
+                    const activityLabel = document.createElement("div");
+                    activityLabel.className = "activity";
+                    activityLabel.textContent = activity ? activity.text : "";
+
+                    hourBlock.appendChild(hourLabel);
+                    hourBlock.appendChild(activityLabel);
+
+                    // Display additional activity details
+                    if (activity && activity.type !== "hobby") {
+                        const activityDetails = document.createElement("div");
+                        activityDetails.className = "activity-details";
+                        activityDetails.innerHTML = `
+                            <div>Priority: ${activity.priority}</div>
+                            <div>Progress: ${activity.progress}%</div>
+                            <div>Deadline: ${activity.deadline}</div>
+                            <div>Completed: ${activity.completed ? "Yes" : "No"}</div>
+                        `;
+                        hourBlock.appendChild(activityDetails);
+                    } else if (activity && activity.type === "hobby") {
+                        const activityDetails = document.createElement("div");
+                        activityDetails.className = "activity-details";
+                        const hobby = hobbies.find(h => h.text === activity.text); // Find the hobby object
+                        activityDetails.innerHTML = `
+                            <div>Importance: ${activity.importance}</div>
+                            <div>Frequency: ${hobby.frequency}</div>
+                            <div>Number This Week: ${hobby.numberThisWeek}</div>
+                            <div>Last Date: ${hobby.lastDate}</div>
+                        `;
+                        hourBlock.appendChild(activityDetails);
+                    }
+
+                    timetable.appendChild(hourBlock);
+                });
+            }
+
+            generateTimetable();
+        </script>
+    </body>
+</html>

@@ -1,8 +1,10 @@
 // Get  the month and date
-
 const today = new Date();
 const month = today.toLocaleDateString('en-US', { month: 'long' });
 const day = today.toLocaleDateString('en-US', { day: 'numeric' });
+
+const Tasks = [ ];
+const Hobbies = [{ frequency: 2, importance: "high", text: "Readings", numberThisWeek: 0, lastDate: null }];
 
 //Display it
 document.querySelector(".time").textContent = `${month}, ${day}`;
@@ -33,7 +35,9 @@ auth.onAuthStateChanged(user => {
         document.getElementById('name').innerText = `${userData.name} ${userData.surname}`;
 
         loadUserData(userId);
-        //loadTodaysSchedule(userId);
+       
+        generateTimetable();
+
       });
   } else {
     // If user is not logged in, redirect to login page
@@ -45,8 +49,8 @@ function loadUserData(userId) {
   // Load and display hobbies
   database.ref('users/' + userId + '/hobbies').on('value', snapshot => {
     const hobbies = snapshot.val();
-    const hobbyList = document.getElementById('hobbyList');
-    hobbyList.innerHTML = '';
+    const hobbyList = document.querySelector('.messages');
+    //hobbyList.innerHTML = '';
     if (hobbies) {
       Object.keys(hobbies).forEach(key => {
         const hobby = hobbies[key];
@@ -54,6 +58,38 @@ function loadUserData(userId) {
         div.className = 'list-item';
         div.innerHTML = `${hobby.text} (Importance: ${hobby.importance}, Frequency: ${hobby.frequency}) <button class="edit" onclick="editItem('hobbies', '${key}', '${JSON.stringify(hobby)}')">Edit</button> <button onclick="deleteItem('hobbies', '${key}')">Delete</button>`;
         hobbyList.appendChild(div);
+
+         // Declare a new task
+         const newHobby = {
+          text: hobby.text,
+          frequency: hobby.frequency, 
+          importance: hobby.importance,
+          numberThisWeek: 3,
+          lastDate: null
+        };
+
+        // Add the new task to the tasks array
+        Hobbies.push(newHobby);
+        generateTimetable();
+        console.log(Hobbies)
+        
+      });
+    }
+  });
+
+  database.ref('users/' + userId + '/obligations').on('value', snapshot => {
+    const obligations = snapshot.val();
+    const hobbyList = document.querySelector('.messages');
+    //hobbyList.innerHTML = '';
+    if (obligations) {
+      Object.keys(obligations).forEach(key => {
+        const obligation = obligations[key];
+        const div = document.createElement('div');
+        div.className = 'list-item';
+        div.innerHTML = `${obligation.text} (Importance: ${obligation.importance}, Frequency: ${obligation.frequency}) <button class="edit" onclick="editItem('hobbies', '${key}', '${JSON.stringify(hobby)}')">Edit</button> <button onclick="deleteItem('hobbies', '${key}')">Delete</button>`;
+        hobbyList.appendChild(div);
+
+
       });
     }
   });
@@ -64,7 +100,8 @@ function loadUserData(userId) {
     const totalTasks = tasks ? Object.keys(tasks).length : 0;
     document.querySelector('.total-tasks').textContent = totalTasks;
     const taskList = document.querySelector('.project-boxes');
-    //taskList.innerHTML = '';
+    taskList.innerHTML = '';
+    Tasks.length = 0;
     if (tasks) {
       Object.keys(tasks).forEach(key => {
         const task = tasks[key];
@@ -124,10 +161,17 @@ function loadUserData(userId) {
         const editButton = document.createElement('button');
         editButton.className = 'edit-btn';
         editButton.textContent = 'Edit';
-    
+        editButton.addEventListener('click', function () {
+          editItem('tasks', key, JSON.stringify(task))
+        });
+
+
         const deleteButton = document.createElement('button');
         deleteButton.className = 'delete-btn';
         deleteButton.textContent = 'Delete';
+        deleteButton.addEventListener('click', function () {
+          deleteItem('tasks', key)
+        });
 
         moreOptions.appendChild(editButton);
         moreOptions.appendChild(deleteButton);
@@ -148,7 +192,7 @@ function loadUserData(userId) {
 
         const boxContentSubheader = document.createElement('p');
         boxContentSubheader.className = 'box-content-subheader';
-        boxContentSubheader.textContent = `Priority: ${task.priority}`;
+        boxContentSubheader.textContent = task.priority;
 
         projectBoxContentHeader.appendChild(boxContentHeader);
         projectBoxContentHeader.appendChild(boxContentSubheader);
@@ -230,7 +274,7 @@ function loadUserData(userId) {
         daysLeft.className = 'days-left';
         daysLeft.style.color = '#4067f9';
         var numDaysLeft = calculateDaysLeft(task.deadline);
-        if(numDaysLeft <= 2){
+        if (numDaysLeft <= 2) {
           daysLeft.style.color = '#ef0000';
         }
         daysLeft.textContent = `${calculateDaysLeft(task.deadline)} Days Left`;
@@ -248,16 +292,32 @@ function loadUserData(userId) {
         // Append the project box to the wrapper
         projectBoxWrapper.appendChild(projectBox);
 
-        // Finally, append the project box wrapper to the body or any other container element
-        document.body.appendChild(projectBoxWrapper);
-        const div = document.createElement('div');
-        div.innerHTML = `${task.text} (Deadline: ${task.deadline}, Start Time: ${task.startTime}, Priority: ${task.priority}, Progress: ${task.progress}) <button class="edit" onclick="editItem('tasks', '${key}', '${JSON.stringify(task)}')">Edit</button> <button onclick="deleteItem('tasks', '${key}')">Delete</button>`;
         taskList.appendChild(projectBoxWrapper);
-        taskList.appendChild(div);
+
+        updateMoreOptions()
+
+           // Declare a new task
+           const newTask = {
+            text: task.text,
+            type: taskList.type,
+            completed: task.completed,
+            deadline: task.deadline,
+            priority: task.priority,
+            progress: task.progress,
+            startTime: task.startTime
+          };
+  
+          // Add the new task to the tasks array
+          Tasks.push(newTask);
+          generateTimetable();
       });
     }
   });
+
+  
 }
+
+
 
 function calculateDaysLeft(targetDateStr) {
   // Convert the target date string to a Date object
@@ -274,3 +334,17 @@ function calculateDaysLeft(targetDateStr) {
 
   return daysLeft;
 }
+
+function editItem(type, key, value) {
+  const newValue = prompt('Edit item:', value);
+  if (newValue !== null) {
+    const userId = auth.currentUser.uid;
+    database.ref('users/' + userId + '/' + type + '/' + key).set(JSON.parse(newValue));
+  }
+}
+
+function deleteItem(type, key) {
+  const userId = auth.currentUser.uid;
+  database.ref('users/' + userId + '/' + type + '/' + key).remove();
+}
+
